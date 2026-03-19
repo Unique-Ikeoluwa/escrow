@@ -22,12 +22,7 @@ contract Escrow is IEscrow {
     error AlreadyApproved();
     error ZeroAddressNotAllowed();
 
-    constructor(
-        address _buyer,
-        address _seller,
-        address _arbiter,
-        uint256 _amount
-    ) {
+    constructor(address _buyer, address _seller, address _arbiter, uint256 _amount) {
         if (_buyer == address(0) || _seller == address(0) || _arbiter == address(0)) {
             revert ZeroAddressNotAllowed();
         }
@@ -64,13 +59,7 @@ contract Escrow is IEscrow {
         _;
     }
 
-    function fund()
-        external
-        payable
-        override
-        onlyBuyer
-        inState(State.AWAITING_FUNDING)
-    {
+    function fund() external payable override onlyBuyer inState(State.AWAITING_FUNDING) {
         if (msg.value != amount) {
             revert WrongDepositAmount(amount, msg.value);
         }
@@ -79,12 +68,7 @@ contract Escrow is IEscrow {
         emit Funded(msg.sender, msg.value);
     }
 
-    function approve()
-        external
-        override
-        onlyParty
-        inState(State.FUNDED)
-    {
+    function approve() external override onlyParty inState(State.FUNDED) {
         if (msg.sender == buyer) {
             if (approvedByBuyer) revert AlreadyApproved();
             approvedByBuyer = true;
@@ -100,22 +84,12 @@ contract Escrow is IEscrow {
         }
     }
 
-    function raiseDispute()
-        external
-        override
-        onlyParty
-        inState(State.FUNDED)
-    {
+    function raiseDispute() external override onlyParty inState(State.FUNDED) {
         state = State.DISPUTED;
         emit DisputeRaised(msg.sender);
     }
 
-    function resolveDispute(bool releaseToSeller)
-        external
-        override
-        onlyArbiter
-        inState(State.DISPUTED)
-    {
+    function resolveDispute(bool releaseToSeller) external override onlyArbiter inState(State.DISPUTED) {
         if (releaseToSeller) {
             _releaseToSeller();
         } else {
@@ -129,7 +103,7 @@ contract Escrow is IEscrow {
         state = State.COMPLETE;
 
         uint256 bal = address(this).balance;
-        (bool ok, ) = payable(seller).call{value: bal}("");
+        (bool ok,) = payable(seller).call{value: bal}("");
         require(ok, "Transfer to seller failed");
 
         emit Released(seller, bal);
@@ -139,7 +113,7 @@ contract Escrow is IEscrow {
         state = State.REFUNDED;
 
         uint256 bal = address(this).balance;
-        (bool ok, ) = payable(buyer).call{value: bal}("");
+        (bool ok,) = payable(buyer).call{value: bal}("");
         require(ok, "Refund to buyer failed");
 
         emit Refunded(buyer, bal);

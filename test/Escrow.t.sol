@@ -42,13 +42,7 @@ contract EscrowTest is Test {
 
     function testBuyerMustFundExactAmount() public {
         vm.prank(buyer);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Escrow.WrongDepositAmount.selector,
-                ESCROW_AMOUNT,
-                0.5 ether
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Escrow.WrongDepositAmount.selector, ESCROW_AMOUNT, 0.5 ether));
         escrow.fund{value: 0.5 ether}();
     }
 
